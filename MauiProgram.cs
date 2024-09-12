@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using OCRTest.ViewModels;
 using OCRTest.Views;
 using Plugin.Maui.OCR;
 
@@ -23,6 +24,7 @@ public static class MauiProgram
 
         builder.Services.AddSingleton(OcrPlugin.Default);
         builder.Services.AddTransient<MainPage>();
+        builder.Services.AddTransient<MainPageViewModel>();
 
         return builder.Build();
     }

@@ -1,47 +1,44 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="OCRTest.Views.MainPage">
+             xmlns:vm="clr-namespace:OCRTest.ViewModels"
+             x:Class="OCRTest.Views.MainPage"
+             x:DataType="vm:MainPageViewModel">
 
     <ScrollView>
         <StackLayout Padding="20" Spacing="10">
             <HorizontalStackLayout HorizontalOptions="Center">
                 <Switch
-                    x:Name="TryHardSwitch"
                     Margin="0,0,10,0"
-                    IsToggled="False" />
+                    IsToggled="{Binding IsTryHard}" />
                 <Label Text="Try Hard?" VerticalOptions="Center" />
             </HorizontalStackLayout>
             <Button
-                x:Name="OpenFromCameraBtn"
-                Clicked="OpenFromCameraBtn_Clicked"
+                Command="{Binding OpenFromCameraButtonTappedCommand}"
                 MaximumHeightRequest="100"
                 MaximumWidthRequest="200"
                 Text="From Camera" />
             <Button
-                x:Name="OpenFromFileBtn"
-                Clicked="OpenFromFileBtn_Clicked"
+                Command="{Binding OpenFromFileButtonTappedCommand}"
                 MaximumHeightRequest="100"
                 MaximumWidthRequest="200"
                 Text="From File" />
             <Picker
-                x:Name="PatternPicker"
                 HorizontalOptions="Center"
-                MinimumWidthRequest="200"/>
+                MinimumWidthRequest="200"
+                ItemsSource="{Binding PickerItems}"
+                SelectedIndex="{Binding PickerSelectedIndex}"/>
             <Label
-                x:Name="ResultLbl"
                 BackgroundColor="{StaticResource White}"
                 TextColor="Black"
                 HorizontalOptions="Center"
                 MinimumHeightRequest="200"
-                Text="Waiting for results .." />
+                Text="{Binding ResultsText}" />
             <Button
-                x:Name="ClearBtn"
-                Clicked="ClearBtn_Clicked"
-                IsEnabled="False"
                 MaximumHeightRequest="100"
                 MaximumWidthRequest="200"
-                Text="Clear Result" />
+                Text="Clear Result"
+                Command="{Binding ClearButtonTappedCommand}"/>
         </StackLayout>
     </ScrollView>
 </ContentPage>
