@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using OCRTest.Services;
 using OCRTest.ViewModels;
 using OCRTest.Views;
@@ -21,7 +20,7 @@ public static class MauiProgram
             .UseOcr();
 
 #if DEBUG
-		builder.Logging.AddDebug();
+        builder.Logging.AddDebug();
 #endif
 
         builder.Services.AddSingleton(OcrPlugin.Default);

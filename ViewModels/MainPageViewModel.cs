@@ -1,9 +1,9 @@
-﻿using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OCRTest.Models;
 using OCRTest.Models.Enums;
 using OCRTest.Services;
+using System.Collections.ObjectModel;
 
 namespace OCRTest.ViewModels;
 

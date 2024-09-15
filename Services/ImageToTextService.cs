@@ -1,7 +1,7 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
-using OCRTest.Models.Enums;
+﻿using OCRTest.Models.Enums;
 using Plugin.Maui.OCR;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace OCRTest.Services;
 
