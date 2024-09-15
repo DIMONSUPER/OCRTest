@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using OCRTest.Services;
 using OCRTest.ViewModels;
 using OCRTest.Views;
 using Plugin.Maui.OCR;
@@ -23,6 +25,10 @@ public static class MauiProgram
 #endif
 
         builder.Services.AddSingleton(OcrPlugin.Default);
+        builder.Services.AddSingleton(MediaPicker.Default);
+
+        builder.Services.AddTransient<IImageToTextService, ImageToTextService>();
+
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<MainPageViewModel>();
 

@@ -1,35 +1,28 @@
 ﻿using System.Collections.ObjectModel;
-using System.Text.RegularExpressions;
-using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Plugin.Maui.OCR;
+using OCRTest.Models;
+using OCRTest.Models.Enums;
+using OCRTest.Services;
 
 namespace OCRTest.ViewModels;
 
 public partial class MainPageViewModel : ObservableObject
 {
-    private readonly IOcrService _ocrService;
+    private readonly IImageToTextService _imageToTextService;
 
-    private readonly Dictionary<string, string> _patterns = new()
+    public MainPageViewModel(IImageToTextService imageToTextService)
     {
-        { "No pattern", string.Empty },
-        { "With digits", @"\d+" },
-        { "Text only", @"^(?!.*\d).*" },
-        { "Elements with position", string.Empty },
-        { "Elements grouped by Y", string.Empty },
-        { "Elements grouped by Y Clustering", string.Empty }
-    };
+        _imageToTextService = imageToTextService;
 
-    public MainPageViewModel(IOcrService ocrService)
-    {
-        _ocrService = ocrService;
-
-        PickerItems = new(_patterns.Keys);
+        InitPickerItems();
     }
 
     [ObservableProperty]
-    private ObservableCollection<string> pickerItems;
+    private ObservableCollection<PickerDisplayModel> pickerItems;
+
+    [ObservableProperty]
+    private PickerDisplayModel pickerSelectedItem;
 
     [ObservableProperty]
     private int pickerSelectedIndex = 0;
@@ -56,13 +49,11 @@ public partial class MainPageViewModel : ObservableObject
     {
         if (MediaPicker.Default.IsCaptureSupported)
         {
-            var photo = await MediaPicker.Default.CapturePhotoAsync();
+            var result = await _imageToTextService.OpenFromCameraAsync(PickerSelectedItem.Pattern, IsTryHard);
 
-            if (photo != null)
+            if (result != null)
             {
-                var result = await ProcessPhotoAsync(photo);
-
-                ProcessResult(result);
+                ResultsText = result;
             }
         }
         else
@@ -74,113 +65,32 @@ public partial class MainPageViewModel : ObservableObject
     [RelayCommand]
     private async Task OpenFromFileButtonTapped()
     {
-        var photo = await MediaPicker.Default.PickPhotoAsync();
+        var result = await _imageToTextService.OpenFromFileAsync(PickerSelectedItem.Pattern, IsTryHard);
 
-        if (photo == null)
+        if (result != null)
         {
-            return;
+            ResultsText = result;
         }
-
-        var result = await ProcessPhotoAsync(photo);
-
-        ProcessResult(result);
     }
 
-    private List<List<OcrResult.OcrElement>> ClusterElementsByY(IList<OcrResult.OcrElement> elements, int threshold)
+    private void InitPickerItems()
     {
-        var sortedPoints = elements.OrderBy(p => p.Y).ToList();
-        var clusters = new List<List<OcrResult.OcrElement>>();
-        List<OcrResult.OcrElement> currentCluster =
-        [
-            sortedPoints[0]
-        ];
+        PickerItems = [];
 
-        for (int i = 1; i < sortedPoints.Count; i++)
+        foreach (TextPattern enumValue in Enum.GetValues(typeof(TextPattern)))
         {
-            if (Math.Abs(sortedPoints[i].Y - sortedPoints[i - 1].Y) > threshold)
+            var alias = enumValue switch
             {
-                clusters.Add(currentCluster);
-                currentCluster = new();
-            }
+                TextPattern.None => "No pattern",
+                TextPattern.ContainsDigits => "With digits",
+                TextPattern.TextOnly => "Text only",
+                TextPattern.ElementsPositions => "Elements with position",
+                TextPattern.ElementsGroupY => "Elements grouped by Y",
+                TextPattern.ElementsGroupYClustering => "Elements grouped by Y Clustering",
+                _ => string.Empty
+            };
 
-            currentCluster.Add(sortedPoints[i]);
-        }
-
-        clusters.Add(currentCluster);
-
-        return clusters;
-    }
-
-    private async Task<OcrResult> ProcessPhotoAsync(FileResult photo)
-    {
-        await _ocrService.InitAsync();
-
-        await using var sourceStream = await photo.OpenReadAsync();
-
-        var imageData = new byte[sourceStream.Length];
-
-        await sourceStream.ReadAsync(imageData);
-
-        var options = new OcrOptions.Builder().SetTryHard(IsTryHard).SetLanguage("en-US").Build();
-
-        return await _ocrService.RecognizeTextAsync(imageData, options);
-    }
-
-    private void ProcessResult(OcrResult result)
-    {
-        var selectedPattern = _patterns[PickerItems[PickerSelectedIndex]];
-
-        if (!string.IsNullOrWhiteSpace(selectedPattern))
-        {
-            var regex = new Regex(selectedPattern);
-            var builder = new StringBuilder();
-
-            foreach (var line in result.Lines)
-            {
-                if (regex.IsMatch(line))
-                {
-                    builder.AppendLine(line);
-                }
-            }
-
-            ResultsText = builder.ToString();
-        }
-        else if (PickerSelectedIndex == 3)
-        {
-            var builder = new StringBuilder();
-            foreach (var el in result.Elements)
-            {
-                builder.AppendLine($"{el.Text} ({el.X};{el.Y})");
-            }
-            ResultsText = builder.ToString();
-        }
-        else if (PickerSelectedIndex == 4)
-        {
-            var builder = new StringBuilder();
-            var groups = result.Elements.GroupBy(x => x.Y);
-
-            foreach (var group in groups)
-            {
-                var texts = group.Select(x => x.Text);
-                builder.AppendLine(string.Join(" ", texts));
-            }
-            ResultsText = builder.ToString();
-        }
-        else if (PickerSelectedIndex == 5)
-        {
-            var clusters = ClusterElementsByY(result.Elements, 5);
-            var builder = new StringBuilder();
-
-            foreach (var texts in clusters.Select(cluster => cluster.Select(x => x.Text)))
-            {
-                builder.AppendLine(string.Join(" ", texts));
-            }
-
-            ResultsText = builder.ToString();
-        }
-        else
-        {
-            ResultsText = result.AllText;
+            PickerItems.Add(new PickerDisplayModel(enumValue, alias));
         }
     }
 }

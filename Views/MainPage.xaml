@@ -27,6 +27,8 @@
                 HorizontalOptions="Center"
                 MinimumWidthRequest="200"
                 ItemsSource="{Binding PickerItems}"
+                ItemDisplayBinding="{Binding Title}"
+                SelectedItem="{Binding PickerSelectedItem}"
                 SelectedIndex="{Binding PickerSelectedIndex}"/>
             <Label
                 BackgroundColor="{StaticResource White}"
